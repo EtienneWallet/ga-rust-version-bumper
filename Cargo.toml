@@ -1,0 +1,22 @@
+[package]
+name = "rust-version-bumper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_version_bumper"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rust-version-bumper"
+path = "src/main.rs"
+
+[dependencies]
+git2 = "0.18.2"
+libgit2-sys = { version = "0.16", features = ["vendored"] }
+semver = "1.0.22"
+toml_edit = "0.22.6"
+clap = { version = "4.5.3", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.10.1"
