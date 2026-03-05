@@ -1,0 +1,71 @@
+# consumers must set: permissions: contents: write
+# consumers must set: fetch-depth: 0 in checkout step
+name: 'Rust Version Bumper'
+description: 'Automatically bump Rust workspace versions using Conventional Commits and target-based SemVer philosophy'
+
+inputs:
+  branch:
+    description: 'The branch being processed (e.g., develop, main)'
+    required: true
+  dry-run:
+    description: 'If true, log intended actions but do not commit, tag, or push'
+    required: false
+    default: 'false'
+  dev-branch:
+    description: 'Name of the development branch to advance after a stable release on main'
+    required: false
+    default: 'develop'
+  next-dev-target:
+    description: 'How to compute the next development version after a stable release: patch or minor'
+    required: false
+    default: 'patch'
+
+outputs:
+  new-version:
+    description: 'The new version string after bumping (empty if no-op)'
+    value: ${{ steps.bumper.outputs.new-version }}
+  previous-version:
+    description: 'The version string before any change'
+    value: ${{ steps.bumper.outputs.previous-version }}
+  bumped:
+    description: 'Whether a version change occurred (true/false)'
+    value: ${{ steps.bumper.outputs.bumped }}
+  next-dev-version:
+    description: 'The version set on the dev branch after a stable release (empty if not on main)'
+    value: ${{ steps.bumper.outputs.next-dev-version }}
+  dev-advance-failed:
+    description: 'Whether the dev branch advancement failed (true/false)'
+    value: ${{ steps.bumper.outputs.dev-advance-failed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Cargo registry and build artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ${{ github.action_path }}/../../../target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build release binary
+      shell: bash
+      working-directory: ${{ github.action_path }}/../../..
+      run: cargo build --release
+
+    - name: Run version bumper
+      id: bumper
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        "${{ github.action_path }}/../../../target/release/rust-version-bumper" \
+          --branch "${{ inputs.branch }}" \
+          --dry-run "${{ inputs.dry-run }}" \
+          --dev-branch "${{ inputs.dev-branch }}" \
+          --next-dev-target "${{ inputs.next-dev-target }}"

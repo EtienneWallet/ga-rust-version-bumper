@@ -1,0 +1,55 @@
+name: Test Version Bumper
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests
+        run: cargo test
+
+  test-bump:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run version bumper (dry-run)
+        id: bumper
+        uses: ./.github/actions/bumper
+        with:
+          branch: ${{ github.ref_name }}
+          dry-run: 'true'
+
+      - name: Print bumper outputs
+        run: |
+          echo "new-version:       ${{ steps.bumper.outputs.new-version }}"
+          echo "previous-version:  ${{ steps.bumper.outputs.previous-version }}"
+          echo "bumped:            ${{ steps.bumper.outputs.bumped }}"
+          echo "next-dev-version:  ${{ steps.bumper.outputs.next-dev-version }}"
+          echo "dev-advance-failed: ${{ steps.bumper.outputs.dev-advance-failed }}"
