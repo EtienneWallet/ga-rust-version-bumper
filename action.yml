@@ -49,12 +49,12 @@ runs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-          ${{ github.action_path }}/../../../target
+          ${{ github.action_path }}/target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Build release binary
       shell: bash
-      working-directory: ${{ github.action_path }}/../../..
+      working-directory: ${{ github.action_path }}
       run: cargo build --release
 
     - name: Run version bumper
@@ -64,7 +64,7 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
-        "${{ github.action_path }}/../../../target/release/rust-version-bumper" \
+        "${{ github.action_path }}/target/release/rust-version-bumper" \
           --branch "${{ inputs.branch }}" \
           --dry-run "${{ inputs.dry-run }}" \
           --dev-branch "${{ inputs.dev-branch }}" \

@@ -41,7 +41,7 @@ jobs:
 
       - name: Run version bumper (dry-run)
         id: bumper
-        uses: ./.github/actions/bumper
+        uses: ./
         with:
           branch: ${{ github.ref_name }}
           dry-run: 'true'
