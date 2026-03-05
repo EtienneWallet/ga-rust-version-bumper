@@ -58,7 +58,7 @@ pub fn run_main_branch_release(
     let next_dev_str = next_dev.to_string();
 
     if dry_run {
-        println!("[DRY-RUN] Would release stable {} on main", stable_str);
+        println!("[DRY-RUN] Would release stable {} on main (from {})", stable_str, previous_version);
         println!(
             "[DRY-RUN] Would advance {} to {}",
             dev_branch, next_dev_str
@@ -86,6 +86,8 @@ pub fn run_main_branch_release(
 
     // 8. Push main — failure is hard error
     git_ops::push_to_remote(repo_path, "main", Some(&tag))?;
+
+    println!("Released stable {} on main (from {})", stable_str, previous_version);
 
     // 9. Advance dev branch
     let mut dev_advance_failed = false;

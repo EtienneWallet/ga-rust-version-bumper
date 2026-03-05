@@ -113,7 +113,7 @@ fn run_non_main(args: &Args, repo_path: &Path, dry_run: bool) -> Result<(), Stri
     let new_version_str = new_version.to_string();
 
     if dry_run {
-        println!("[DRY-RUN] Would bump to {}", new_version_str);
+        println!("[DRY-RUN] Would bump from {} to {}", previous_version, new_version_str);
         write_output("new-version", &new_version_str);
         write_output("previous-version", &previous_version);
         write_output("bumped", "true");
@@ -132,6 +132,8 @@ fn run_non_main(args: &Args, repo_path: &Path, dry_run: bool) -> Result<(), Stri
 
     // 9. Push
     git_ops::push_to_remote(repo_path, &args.branch, Some(&tag))?;
+
+    println!("Bumped from {} to {}", previous_version, new_version_str);
 
     // 10. Set outputs
     write_output("new-version", &new_version_str);
