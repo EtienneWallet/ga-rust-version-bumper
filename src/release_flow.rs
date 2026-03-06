@@ -1,7 +1,10 @@
 use std::path::Path;
 
-use crate::bump_logic::{is_stable, next_dev_version, parse_version, strip_dev_suffix, NextDevTarget};
+use crate::bump_logic::{
+    is_stable, next_dev_version, parse_version, strip_dev_suffix, NextDevTarget,
+};
 use crate::git_ops;
+use crate::lockfile_ops;
 use crate::toml_ops;
 
 pub struct MainReleaseOutputs {
@@ -21,7 +24,10 @@ pub fn run_main_branch_release(
     // 1. Check skip
     let commit_msg = git_ops::get_head_commit_message(repo_path)?;
     if git_ops::is_skip_commit(&commit_msg) {
-        println!("Skipping: detected automated version commit (message: {:?})", commit_msg);
+        println!(
+            "Skipping: detected automated version commit (message: {:?})",
+            commit_msg
+        );
         return Ok(MainReleaseOutputs {
             new_version: String::new(),
             previous_version: String::new(),
@@ -58,11 +64,11 @@ pub fn run_main_branch_release(
     let next_dev_str = next_dev.to_string();
 
     if dry_run {
-        println!("[DRY-RUN] Would release stable {} on main (from {})", stable_str, previous_version);
         println!(
-            "[DRY-RUN] Would advance {} to {}",
-            dev_branch, next_dev_str
+            "[DRY-RUN] Would release stable {} on main (from {})",
+            stable_str, previous_version
         );
+        println!("[DRY-RUN] Would advance {} to {}", dev_branch, next_dev_str);
         return Ok(MainReleaseOutputs {
             new_version: stable_str,
             previous_version,
@@ -78,6 +84,7 @@ pub fn run_main_branch_release(
         location,
         &stable_str,
     )?;
+    lockfile_ops::update_lockfile_version(repo_path, &version_str, &stable_str)?;
 
     // 7. Commit and tag on main
     let tag = format!("v{}", stable_str);
@@ -87,7 +94,10 @@ pub fn run_main_branch_release(
     // 8. Push main — failure is hard error
     git_ops::push_to_remote(repo_path, "main", Some(&tag))?;
 
-    println!("Released stable {} on main (from {})", stable_str, previous_version);
+    println!(
+        "Released stable {} on main (from {})",
+        stable_str, previous_version
+    );
 
     // 9. Advance dev branch
     let mut dev_advance_failed = false;
@@ -132,7 +142,8 @@ fn advance_dev_branch(
 
     // Re-read location from dev branch's Cargo.toml — may differ from main's structure
     // (e.g., main uses [workspace.package], dev uses [package], or vice versa)
-    let (_, dev_location) = toml_ops::read_version(repo_path.join("Cargo.toml").as_path())?;
+    let (dev_version_str, dev_location) =
+        toml_ops::read_version(repo_path.join("Cargo.toml").as_path())?;
 
     // Write next dev version
     toml_ops::write_version(
@@ -140,6 +151,7 @@ fn advance_dev_branch(
         dev_location,
         next_dev_str,
     )?;
+    lockfile_ops::update_lockfile_version(repo_path, &dev_version_str, next_dev_str)?;
 
     // Commit (no tag for dev advancement)
     let msg = format!("chore: start next development cycle {}", next_dev_str);

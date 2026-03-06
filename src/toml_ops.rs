@@ -60,8 +60,7 @@ pub fn write_version(
         }
     }
 
-    fs::write(path, doc.to_string())
-        .map_err(|e| format!("Failed to write Cargo.toml: {}", e))?;
+    fs::write(path, doc.to_string()).map_err(|e| format!("Failed to write Cargo.toml: {}", e))?;
 
     Ok(())
 }

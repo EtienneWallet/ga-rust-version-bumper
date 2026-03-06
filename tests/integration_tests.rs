@@ -1,6 +1,10 @@
-use rust_version_bumper::bump_logic::{compute_bump, parse_version, NextDevTarget, next_dev_version};
+use rust_version_bumper::bump_logic::{
+    compute_bump, next_dev_version, parse_version, NextDevTarget,
+};
 use rust_version_bumper::commit_parser::{parse_commit, CommitImpact};
-use rust_version_bumper::git_ops::{commit_and_tag, commit_only, get_head_commit_message, is_skip_commit};
+use rust_version_bumper::git_ops::{
+    commit_and_tag, commit_only, get_head_commit_message, is_skip_commit,
+};
 use rust_version_bumper::release_flow::run_main_branch_release;
 use rust_version_bumper::toml_ops::{read_version, write_version, VersionLocation};
 
@@ -28,7 +32,8 @@ fn setup_test_repo(initial_version: &str, commit_message: &str) -> (TempDir, Pat
     let tree_oid = index.write_tree().unwrap();
     {
         let tree = repo.find_tree(tree_oid).unwrap();
-        repo.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[]).unwrap();
+        repo.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[])
+            .unwrap();
     }
 
     let path = dir.path().to_path_buf();
@@ -130,7 +135,9 @@ fn test_skip_release_commit() {
 
 #[test]
 fn test_skip_dev_cycle_commit() {
-    assert!(is_skip_commit("chore: start next development cycle 1.3.1-dev0"));
+    assert!(is_skip_commit(
+        "chore: start next development cycle 1.3.1-dev0"
+    ));
 }
 
 // --- TOML read/write ---
@@ -170,7 +177,12 @@ fn test_commit_creates_tag_and_advances_head() {
     let cargo_path = repo_path.join("Cargo.toml");
     write_version(&cargo_path, VersionLocation::Package, "1.2.3-dev6").unwrap();
 
-    commit_and_tag(&repo_path, "chore: bump version to 1.2.3-dev6", "v1.2.3-dev6").unwrap();
+    commit_and_tag(
+        &repo_path,
+        "chore: bump version to 1.2.3-dev6",
+        "v1.2.3-dev6",
+    )
+    .unwrap();
 
     let msg = get_head_commit_message(&repo_path).unwrap();
     assert_eq!(msg, "chore: bump version to 1.2.3-dev6");
@@ -199,7 +211,10 @@ fn test_dry_run_produces_no_commit() {
 
     // HEAD should be unchanged
     let current_head = repo.head().unwrap().peel_to_commit().unwrap().id();
-    assert_eq!(initial_head, current_head, "dry-run must not create commits");
+    assert_eq!(
+        initial_head, current_head,
+        "dry-run must not create commits"
+    );
 }
 
 #[test]
@@ -215,7 +230,13 @@ fn test_commit_only_creates_no_tag() {
 
     // Verify NO tag was created
     let repo = Repository::open(&repo_path).unwrap();
-    let tags: Vec<_> = repo.tag_names(None).unwrap().iter().flatten().map(String::from).collect();
+    let tags: Vec<_> = repo
+        .tag_names(None)
+        .unwrap()
+        .iter()
+        .flatten()
+        .map(String::from)
+        .collect();
     assert!(tags.is_empty(), "commit_only must not create any tags");
 }
 
@@ -259,8 +280,7 @@ fn test_main_release_already_stable_is_noop() {
 
 #[test]
 fn test_main_release_skip_on_skip_commit() {
-    let (_dir, repo_path) =
-        setup_test_repo("1.3.0-dev10", "chore: release stable 1.3.0");
+    let (_dir, repo_path) = setup_test_repo("1.3.0-dev10", "chore: release stable 1.3.0");
 
     let outputs = run_main_branch_release("develop", "patch", &repo_path, true).unwrap();
 
@@ -277,5 +297,8 @@ fn test_main_release_dry_run_no_commit_created() {
     run_main_branch_release("develop", "patch", &repo_path, true).unwrap();
 
     let current_head = repo.head().unwrap().peel_to_commit().unwrap().id();
-    assert_eq!(initial_head, current_head, "dry-run must not create commits on main");
+    assert_eq!(
+        initial_head, current_head,
+        "dry-run must not create commits on main"
+    );
 }

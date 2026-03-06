@@ -170,13 +170,19 @@ mod tests {
     #[test]
     fn test_dev_bump_no_suffix() {
         let v = parse_version("0.1.0").unwrap();
-        assert_eq!(compute_bump(&v, CommitImpact::Dev).to_string(), "0.1.0-dev0");
+        assert_eq!(
+            compute_bump(&v, CommitImpact::Dev).to_string(),
+            "0.1.0-dev0"
+        );
     }
 
     #[test]
     fn test_dev_bump_with_suffix() {
         let v = parse_version("1.2.3-dev5").unwrap();
-        assert_eq!(compute_bump(&v, CommitImpact::Dev).to_string(), "1.2.3-dev6");
+        assert_eq!(
+            compute_bump(&v, CommitImpact::Dev).to_string(),
+            "1.2.3-dev6"
+        );
     }
 
     #[test]
@@ -279,7 +285,12 @@ mod tests {
 
     #[test]
     fn test_next_dev_patch() {
-        let v = Version { major: 1, minor: 3, patch: 0, dev: None };
+        let v = Version {
+            major: 1,
+            minor: 3,
+            patch: 0,
+            dev: None,
+        };
         assert_eq!(
             next_dev_version(&v, NextDevTarget::Patch).to_string(),
             "1.3.1-dev0"
@@ -288,7 +299,12 @@ mod tests {
 
     #[test]
     fn test_next_dev_minor() {
-        let v = Version { major: 1, minor: 3, patch: 0, dev: None };
+        let v = Version {
+            major: 1,
+            minor: 3,
+            patch: 0,
+            dev: None,
+        };
         assert_eq!(
             next_dev_version(&v, NextDevTarget::Minor).to_string(),
             "1.4.0-dev0"

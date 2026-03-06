@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-06
+
+### Added
+
+- **Cargo.lock version syncing**: When `Cargo.lock` is tracked in git, local package versions are automatically updated alongside `Cargo.toml` during bumps, stable releases, and dev branch advancement
+- `is_file_tracked()` utility in `git_ops` to check if a file exists in the HEAD tree
+- New `lockfile_ops` module with `update_lockfile_version()` — identifies local packages by absence of `source` field and updates matching versions
+- 6 new unit tests covering lockfile update logic and file tracking detection
+
+### Fixed
+
+- `Cargo.lock` no longer becomes out of sync after version bumps when tracked in the repository
+
 ## [0.1.0] - 2026-03-05
 
 ### Added
@@ -45,4 +58,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All error paths report clear, actionable error messages
 - TOML formatting preserved on write operations
 
+[0.2.0]: https://github.com/EtienneWallet/ga-rust-version-bumper/releases/tag/v0.2.0
 [0.1.0]: https://github.com/EtienneWallet/ga-rust-version-bumper/releases/tag/v0.1.0

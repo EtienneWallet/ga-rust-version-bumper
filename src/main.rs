@@ -1,6 +1,7 @@
 use rust_version_bumper::bump_logic;
 use rust_version_bumper::commit_parser;
 use rust_version_bumper::git_ops;
+use rust_version_bumper::lockfile_ops;
 use rust_version_bumper::release_flow;
 use rust_version_bumper::toml_ops;
 
@@ -41,7 +42,10 @@ fn main() {
 
     // Validate inputs
     if args.dry_run != "true" && args.dry_run != "false" {
-        eprintln!("Error: --dry-run must be 'true' or 'false', got '{}'", args.dry_run);
+        eprintln!(
+            "Error: --dry-run must be 'true' or 'false', got '{}'",
+            args.dry_run
+        );
         std::process::exit(1);
     }
     if args.next_dev_target != "patch" && args.next_dev_target != "minor" {
@@ -56,7 +60,12 @@ fn main() {
     let repo_path = Path::new(".");
 
     if args.branch == "main" {
-        match release_flow::run_main_branch_release(&args.dev_branch, &args.next_dev_target, repo_path, dry_run) {
+        match release_flow::run_main_branch_release(
+            &args.dev_branch,
+            &args.next_dev_target,
+            repo_path,
+            dry_run,
+        ) {
             Ok(outputs) => {
                 write_output("new-version", &outputs.new_version);
                 write_output("previous-version", &outputs.previous_version);
@@ -64,7 +73,11 @@ fn main() {
                 write_output("next-dev-version", &outputs.next_dev_version);
                 write_output(
                     "dev-advance-failed",
-                    if outputs.dev_advance_failed { "true" } else { "false" },
+                    if outputs.dev_advance_failed {
+                        "true"
+                    } else {
+                        "false"
+                    },
                 );
             }
             Err(e) => {
@@ -89,7 +102,10 @@ fn run_non_main(args: &Args, repo_path: &Path, dry_run: bool) -> Result<(), Stri
 
     // 2. Skip check
     if git_ops::is_skip_commit(&commit_msg) {
-        println!("Skipping: detected automated version commit (message: {:?})", commit_msg);
+        println!(
+            "Skipping: detected automated version commit (message: {:?})",
+            commit_msg
+        );
         write_output("new-version", "");
         write_output("previous-version", "");
         write_output("bumped", "false");
@@ -113,7 +129,10 @@ fn run_non_main(args: &Args, repo_path: &Path, dry_run: bool) -> Result<(), Stri
     let new_version_str = new_version.to_string();
 
     if dry_run {
-        println!("[DRY-RUN] Would bump from {} to {}", previous_version, new_version_str);
+        println!(
+            "[DRY-RUN] Would bump from {} to {}",
+            previous_version, new_version_str
+        );
         write_output("new-version", &new_version_str);
         write_output("previous-version", &previous_version);
         write_output("bumped", "true");
@@ -123,7 +142,12 @@ fn run_non_main(args: &Args, repo_path: &Path, dry_run: bool) -> Result<(), Stri
     }
 
     // 7. Write new version
-    toml_ops::write_version(repo_path.join("Cargo.toml").as_path(), location, &new_version_str)?;
+    toml_ops::write_version(
+        repo_path.join("Cargo.toml").as_path(),
+        location,
+        &new_version_str,
+    )?;
+    lockfile_ops::update_lockfile_version(repo_path, &version_str, &new_version_str)?;
 
     // 8. Commit and tag
     let tag = format!("v{}", new_version_str);

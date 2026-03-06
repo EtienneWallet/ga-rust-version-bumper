@@ -117,7 +117,10 @@ mod tests {
 
     #[test]
     fn test_chore() {
-        assert_eq!(parse_commit("chore: bump version to 1.2.3"), CommitImpact::Dev);
+        assert_eq!(
+            parse_commit("chore: bump version to 1.2.3"),
+            CommitImpact::Dev
+        );
     }
 
     #[test]
